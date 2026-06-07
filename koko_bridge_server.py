@@ -1,23 +1,24 @@
-# KOKO Bridge Server v1.0
-# รับข้อมูลจาก MT5 → ส่งให้ Claude วิเคราะห์ → ส่งคำตอบกลับ MT5
+# KOKO Bridge Server v2.0
+# รับข้อมูลจาก MT5 → ส่งให้ Gemini วิเคราะห์ → ส่งคำตอบกลับ MT5
 # Deploy บน Render.com ฟรี
 
 from flask import Flask, request, jsonify
-import anthropic
+import google.generativeai as genai
 import os
 import json
 
 app = Flask(__name__)
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-2.0-flash")
 API_KEY = os.environ.get("KOKO_API_KEY", "KOKO-BRIDGE-KEY-001")
 
 KOKO_SYSTEM = """คุณคือ KOKO AI ผู้เชี่ยวชาญด้านการเทรด XAU/USD
 วิเคราะห์ข้อมูลตลาดที่ได้รับและตอบเป็น JSON เท่านั้น รูปแบบ:
 {
-  "signal": "สรุปสั้นๆ เช่น SELL โอกาสสูง",
-  "score": "85/100",
-  "direction": "SELL หรือ BUY หรือ WAIT",
-  "reason": "เหตุผลสั้นๆ ภาษาไทย ไม่เกิน 50 ตัวอักษร"
+ "signal": "สรุปสั้นๆ เช่น SELL โอกาสสูง",
+ "score": "85/100",
+ "direction": "SELL หรือ BUY หรือ WAIT",
+ "reason": "เหตุผลสั้นๆ ภาษาไทย ไม่เกิน 50 ตัวอักษร"
 }
 
 หลัก KOKO:
@@ -34,7 +35,9 @@ def analyze():
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data"}), 400
-    prompt = f"""วิเคราะห์ตลาด XAU/USD ตอนนี้:
+    prompt = f"""{KOKO_SYSTEM}
+
+วิเคราะห์ตลาด XAU/USD ตอนนี้:
 ราคา: {data.get('price')} | Spread: {data.get('spread')} pts
 ATR: {data.get('atr')} pts | RSI: {data.get('rsi')}
 EMA Fast: {data.get('ema_fast')} | EMA Slow: {data.get('ema_slow')}
@@ -42,22 +45,22 @@ Buy Vol%: {data.get('buy_vol_pct')}% | Session: {data.get('session')}
 Equity: ${data.get('equity')} | Float P/L: ${data.get('float_pl')}
 Positions: {data.get('positions')} ไม้
 วิเคราะห์และตอบเป็น JSON"""
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=200,
-        system=KOKO_SYSTEM,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    response_text = message.content[0].text.strip()
     try:
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        # ลบ markdown code block ถ้ามี
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
         result = json.loads(response_text)
-    except:
-        result = {"signal": "วิเคราะห์ไม่สำเร็จ","score": "0/100","direction": "WAIT","reason": "ข้อมูลไม่เพียงพอ"}
+    except Exception as e:
+        result = {"signal": "วิเคราะห์ไม่สำเร็จ", "score": "0/100", "direction": "WAIT", "reason": str(e)[:50]}
     return jsonify(result), 200
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "KOKO Bridge OK", "version": "1.0"}), 200
+    return jsonify({"status": "KOKO Bridge v2.0 OK", "ai": "Gemini"}), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
