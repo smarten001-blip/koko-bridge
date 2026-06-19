@@ -1,11 +1,3 @@
-
-koko_bridge_agentic_v3.py
-
-หน้า
-1
-/
-1
-100%
 #!/usr/bin/env python3
 """
 KOKO Bridge Agentic Server v3.0
