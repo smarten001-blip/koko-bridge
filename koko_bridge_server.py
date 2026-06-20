@@ -528,4 +528,4 @@ if __name__ == "__main__":
     print(f"KOKO Bridge Agentic v3.2 starting on port {port}")
     print(f"Features: Gold Variables | Quantum State | Session Filter | Agentic Loop")
     app.run(host="0.0.0.0", port=port)
-กำลังแสดง koko_bridge_server_v3.2.py
+
