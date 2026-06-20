@@ -1,17 +1,3 @@
-koko_bridge_server_v3.2.py
-
-หน้า
-1
-/
-1
-100%
-#!/usr/bin/env python3
-"""
-KOKO Bridge Agentic Server v3.2
-Version: 3.2
-Date: 20 Jun 2026
-Author: KOKO (AI) x พี่ต่อ (Nont)
-
 Upgrade from v3.0:
   [NEW-G1] Gold Variables Logic: DXY, VIX, Session, Spread impact
   [NEW-G2] Session-based risk adjustment (Asian/London/NY)
