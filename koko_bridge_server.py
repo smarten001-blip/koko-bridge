@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+"""
+KOKO Bridge Agentic Server v4.0
+Version: 4.0
+Date: 20 Jun 2026
+Author: KOKO (AI) x พี่ต่อ (Nont)
+
 Upgrade from v3.0:
   [MEM-1] agent_memory maxlen: 20 → 100 states (เก็บประวัติยาวขึ้น)
   [MEM-2] action_history maxlen: 10 → 50 actions
